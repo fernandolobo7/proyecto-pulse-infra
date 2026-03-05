@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse-python-app
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: proyecto-pulse
+  template:
+    metadata:
+      labels:
+        app: proyecto-pulse
+    spec:
+      containers:
+      - name: python-app
+        # REEMPLAZA ESTA URL con la de tu repositorio ECR real
+        image: 415062481836.dkr.ecr.us-east-1.amazonaws.com/proyecto-pulse:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulse-python-service
+  namespace: default
+spec:
+  selector:
+    app: proyecto-pulse
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pulse-ingress
+  namespace: default
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    # Esta etiqueta es vital para que el ALB sepa a qué subredes ir
+    alb.ingress.kubernetes.io/subnets: us-east-1a, us-east-1b 
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pulse-python-service
+                port:
+                  number: 80

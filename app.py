@@ -40,6 +40,8 @@ def measure():
         time.sleep(POLL_INTERVAL)
 
 if __name__ == '__main__':
-    # El puerto 8000 expondrá las métricas para Prometheus
-    start_http_server(8000)
+    # CAMBIO CRÍTICO: Escuchar en 0.0.0.0 y puerto 8080
+    # Esto permite que el balanceador de AWS acceda a las métricas y valide la salud del Pod
+    print("Iniciando servidor de métricas en el puerto 8080...")
+    start_http_server(8080, addr='0.0.0.0')
     measure()
