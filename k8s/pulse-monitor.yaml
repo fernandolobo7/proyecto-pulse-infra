@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pulse-app-monitor
+  namespace: monitoring
+  labels:
+    release: monitoring  # <--- Esto hace que Prometheus lo reconozca
+spec:
+  selector:
+    matchLabels:
+      app: pulse-app     # Debe coincidir con el label de tu Service
+  namespaceSelector:
+    matchNames:
+      - default          # Donde vive tu aplicación
+  endpoints:
+  - port: web            # Nombre que le pusimos al puerto en el Service
+    path: /metrics
+    interval: 15s

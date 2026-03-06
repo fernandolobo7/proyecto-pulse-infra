@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulse-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pulse-app
+  template:
+    metadata:
+      labels:
+        app: pulse-app
+    spec:
+      containers:
+      - name: pulse-container
+        image: 415062481836.dkr.ecr.us-east-1.amazonaws.com/proyecto-pulse:latest
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulse-service
+  labels:                
+    app: pulse-app
+spec:
+  selector:
+    app: pulse-app
+  ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: NodePort
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pulse-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pulse-service
+                port:
+                  number: 80
